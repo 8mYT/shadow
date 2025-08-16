@@ -118,6 +118,11 @@
       color:#fff
     }
     textarea{min-height:110px;resize:vertical}
+
+    /* Feedback list */
+    .feedback-list{margin-top:16px;display:grid;gap:10px}
+    .feedback-item{background:var(--card);padding:12px;border-radius:10px;box-shadow:var(--shadow)}
+    .feedback-item strong{color:var(--accent)}
   </style>
 </head>
 <body>
@@ -134,7 +139,7 @@
       <div class="mc-info">
         <div class="mc-box">IP: <span id="mc-ip">Soon</span></div>
         <div class="mc-box">Port: <span id="mc-port">Soon</span></div>
-        <div class="mc-box">Players Online: <span id="mc-players">0 / ?</span></div>
+        <div class="mc-box">Players Online: <span id="mc-players">Loading...</span></div>
       </div>
     </header>
 
@@ -164,8 +169,19 @@
       </form>
     </section>
 
+    <!-- FEEDBACK -->
+    <section class="section">
+      <h2 class="section-title">FEEDBACK</h2>
+      <form id="feedbackForm" autocomplete="off">
+        <div class="field"><label for="fb_name">Your name</label><input id="fb_name" required /></div>
+        <div class="field"><label for="fb_msg">Your feedback</label><textarea id="fb_msg" required></textarea></div>
+        <div class="top-actions"><button type="submit" class="btn">Send Feedback</button></div>
+      </form>
+      <div id="feedbackList" class="feedback-list"></div>
+    </section>
+
     <footer>
-      <small id="t-footer">© ShadowMC • Crafted with❤️ by Dracos</small>
+      <small id="t-footer">© ShadowMC • Crafted with ❤️ by Dracos</small>
     </footer>
   </div>
 
@@ -187,8 +203,126 @@
   </div>
 
 <script>
-/* (same JS as before for translations, roles, and modal logic) */
-/* You can later replace mc-players innerText with a real API call */
+/* =========================
+   Language + Roles Data
+========================= */
+const I18N = {
+  en: {
+    title: 'ShadowMC',
+    meta: 'Website Maker: Dracos • Web Developers: Dracos',
+    joinDiscord: 'Join Discord',
+    roles: 'ROLES',
+    apply: 'STAFF APPLY',
+    warnings: ["⚠️ DO NOT APPLY WHEN IT'S CLOSED","✅ CHECK OUR DISCORD BEFORE APPLYING"],
+    labels: {name:'Your name',discord:'Your discord username',age:'Your age',country:'Your country',activity:'Your activity',exp:'Your experience',servers:'What servers did you worked in?',why:'Why did you choose us?'},
+    footer: '© ShadowMC • Crafted with ❤️ by Dracos',
+    langBtn: 'العربية',
+    role: { perksTitle: 'Perks', clickForDetails: 'Click for details' },
+    rolesData: [
+      {id:'vip',   name:'VIP',   price:'2 Dollars', perks:['VIP kit','Money','Special Commands']},
+      {id:'vip+',  name:'VIP+',  price:'5 Dollars', perks:['VIP+ kit','Money','Special Commands']},
+      {id:'mvp',   name:'MVP',   price:'10 Dollars', perks:['MVP kit','Money','Special Commands']},
+      {id:'legend',name:'Legend',price:'15 Dollars', perks:['Legend kit','Money','Special Commands']},
+    ]
+  }
+};
+
+let currentLang = 'en';
+const rolesWrap = document.getElementById('roles');
+const L = {
+  name: document.getElementById('l-name'),
+  discord: document.getElementById('l-discord'),
+  age: document.getElementById('l-age'),
+  country: document.getElementById('l-country'),
+  activity: document.getElementById('l-activity'),
+  exp: document.getElementById('l-exp'),
+  servers: document.getElementById('l-servers'),
+  why: document.getElementById('l-why')
+};
+function renderLang(){
+  const T = I18N[currentLang];
+  document.getElementById('t-title').textContent  = T.title;
+  document.getElementById('t-meta').textContent   = T.meta;
+  document.getElementById('t-roles').textContent  = T.roles;
+  document.getElementById('t-apply').textContent  = T.apply;
+  document.getElementById('t-footer').textContent = T.footer;
+  document.getElementById('langBtn').textContent  = T.langBtn;
+  document.getElementById('btnDiscord').textContent = T.joinDiscord;
+  document.getElementById('t-warnings').innerHTML = `<div>${T.warnings[0]}</div><div>${T.warnings[1]}</div>`;
+  L.name.textContent    = T.labels.name;
+  L.discord.textContent = T.labels.discord;
+  L.age.textContent     = T.labels.age;
+  L.country.textContent = T.labels.country;
+  L.activity.textContent= T.labels.activity;
+  L.exp.textContent     = T.labels.exp;
+  L.servers.textContent = T.labels.servers;
+  L.why.textContent     = T.labels.why;
+  rolesWrap.innerHTML = T.rolesData.map(r => `
+    <article class="card" data-role="${r.id}" data-name="${r.name}" data-price="${r.price}" data-perks='${JSON.stringify(r.perks)}'>
+      <h3>${r.name}</h3>
+      <p>${T.role.clickForDetails}</p>
+    </article>`).join('');
+}
+renderLang();
+
+/* =========================
+   Role Modal
+========================= */
+const modal = document.getElementById('roleModal');
+const mTitle = document.getElementById('m-title');
+const mPrice = document.getElementById('m-price');
+const mPerksList  = document.getElementById('m-perks');
+document.addEventListener('click', (e) => {
+  const card = e.target.closest('.card[data-role]');
+  if(card){
+    const perks = JSON.parse(card.dataset.perks);
+    mTitle.textContent = card.dataset.name;
+    mPrice.textContent = card.dataset.price;
+    mPerksList.innerHTML = perks.map(p=>`<li>${p}</li>`).join('');
+    modal.classList.add('open');
+  }
+});
+document.getElementById('m-close').onclick=()=>modal.classList.remove('open');
+
+/* =========================
+   Staff Apply Preview
+========================= */
+document.getElementById('btnPreview').addEventListener('click', e=>{
+  e.preventDefault();
+  const v=id=>document.getElementById(id).value||'-';
+  alert(`${L.name.textContent}: ${v('f_name')}\n${L.discord.textContent}: ${v('f_discord')}\n${L.age.textContent}: ${v('f_age')}`);
+});
+
+/* =========================
+   Feedback System
+========================= */
+const feedbackList = document.getElementById('feedbackList');
+document.getElementById('feedbackForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const name = document.getElementById('fb_name').value;
+  const msg  = document.getElementById('fb_msg').value;
+  const item = document.createElement('div');
+  item.className = "feedback-item";
+  item.innerHTML = `<strong>${name}</strong>: ${msg}`;
+  feedbackList.prepend(item);
+  this.reset();
+});
+
+/* =========================
+   Minecraft Server Status
+========================= */
+async function fetchMCStatus(){
+  const host = "play.example.com"; // 🔴 replace
+  const port = 25565;              // 🔴 replace
+  document.getElementById("mc-ip").textContent = host;
+  document.getElementById("mc-port").textContent = port;
+  try{
+    const res = await fetch(`https://api.mcsrvstat.us/2/${host}:${port}`);
+    const data = await res.json();
+    document.getElementById("mc-players").textContent = (data && data.online) ? `${data.players.online} / ${data.players.max}` : "Offline";
+  }catch{document.getElementById("mc-players").textContent="Error";}
+}
+fetchMCStatus();
 </script>
 </body>
 </html>
