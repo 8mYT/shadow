@@ -1,0 +1,36 @@
+body {
+  background: #200;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.card {
+  background: #900;
+  padding: 20px;
+  margin: 20px auto;
+  width: 400px;
+  border-radius: 10px;
+}
+
+.btn {
+  display: inline-block;
+  margin: 10px;
+  padding: 10px 20px;
+  background: #f00;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.btn:hover {
+  background: #c00;
+}
+
+.roles, .apply {
+  margin: 20px auto;
+  padding: 20px;
+  background: #400;
+  border-radius: 10px;
+  width: 500px;
+}
